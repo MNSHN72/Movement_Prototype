@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4554977344265588160}
   - component: {fileID: 2492947186968404135}
   - component: {fileID: 2921775762763262543}
-  - component: {fileID: 1401820411949270125}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -82,20 +81,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1401820411949270125
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 948414595529668670}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2556720220596236094
 GameObject:
   m_ObjectHideFlags: 0
@@ -105,7 +90,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2457935812145070645}
-  - component: {fileID: 8875587953712027551}
   - component: {fileID: 2326892727568724535}
   - component: {fileID: 3661161155366228406}
   m_Layer: 0
@@ -130,21 +114,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8875587953712027551
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2556720220596236094}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd52e5b04352cb44a92d9d5b260237cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _moveSpeed: 5
-  defaultPosition: {x: 0, y: 0.5, z: 0}
-  moveLimit: 5
 --- !u!143 &2326892727568724535
 CharacterController:
   m_ObjectHideFlags: 0
@@ -162,7 +131,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &3661161155366228406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,11 +139,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2556720220596236094}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cd52e5b04352cb44a92d9d5b260237cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveSpeed: 5
-  defaultPosition: {x: 0, y: 0.5, z: 0}
-  moveLimit: 5
+  _moveSpeed: 10
+  _jumpSpeed: 1
+  _sprintSpeed: 8
+  _gravity: 5
+  _moveDirection: {x: 0, y: 0, z: 0}
+  isGrounded: 0

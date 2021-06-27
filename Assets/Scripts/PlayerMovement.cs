@@ -5,34 +5,47 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float _moveSpeed = 5f;
-    [SerializeField] private Vector3 defaultPosition = new Vector3(0f, 0.5f, 0f);
-    [SerializeField] private float moveLimit = 5f;
-    private bool shouldReset => Input.GetKey(KeyCode.Space);
-    private bool shouldMoveRight => Input.GetAxis("Horizontal") > 0 && this.gameObject.transform.position.x <= moveLimit;
-    private bool shouldMoveLeft => Input.GetAxis("Horizontal") < 0 && this.gameObject.transform.position.x >= -moveLimit;
-    private bool shouldMoveForward => Input.GetAxis("Vertical") > 0 && this.gameObject.transform.position.z <= moveLimit;
-    private bool shouldMoveBack => Input.GetAxis("Vertical") < 0 && this.gameObject.transform.position.z >= -moveLimit;
-    void Update()
-    { 
-        if (shouldMoveRight)
+    [SerializeField] private float _jumpSpeed = 1f;
+    [SerializeField] private float _sprintSpeed = 8f;
+    [SerializeField] private float _gravity = .25f;
+
+    [SerializeField] private Vector3 _moveDirection = Vector3.zero;
+    private CharacterController _characterController;
+    private void Awake() => _characterController = GetComponent<CharacterController>();
+    private void Update()
+    {
+        Debug.Log(_characterController.isGrounded);
+        if (_characterController.isGrounded && Input.GetButtonDown("Jump"))
         {
-            this.gameObject.transform.position += Vector3.right * Time.deltaTime * _moveSpeed;
-        }
-        if (shouldMoveLeft)
-        {
-            this.gameObject.transform.position += Vector3.left * Time.deltaTime * _moveSpeed;
-        }
-        if (shouldMoveForward)
-        {
-            this.gameObject.transform.position += Vector3.forward * Time.deltaTime * _moveSpeed;
-        }
-        if (shouldMoveBack)
-        {
-            this.gameObject.transform.position += Vector3.back * Time.deltaTime * _moveSpeed;
-        }
-        if (shouldReset)
-        {
-            this.gameObject.transform.position = defaultPosition;
+            PlayerJumped = true;
         }
     }
+    private void FixedUpdate()
+    {
+
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+
+        Vector3 inputDirection = new Vector3(horizontal, 0, vertical);
+        Vector3 transformDirection = transform.TransformDirection(inputDirection);
+
+        Vector3 groundMovement = _moveSpeed * Time.deltaTime * transformDirection;
+
+        _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
+
+        if (PlayerJumped)
+        {
+            _moveDirection.y = _jumpSpeed;
+            PlayerJumped = false;
+        }
+        else if (_characterController.isGrounded==false)
+        {
+            _moveDirection.y -= _gravity * Time.deltaTime; 
+        }
+
+        _characterController.Move(_moveDirection);
+
+    }
+    private bool PlayerJumped;
+
 }
