@@ -1101,12 +1101,16 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: _moveSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _boostSpeed
       value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _sprintSpeed
-      value: 18
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: ShapeModule.type
