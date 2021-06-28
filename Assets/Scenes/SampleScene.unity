@@ -1040,14 +1040,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2326892727568724535, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
-      propertyPath: m_SkinWidth
-      value: 0.08
-      objectReference: {fileID: 0}
-    - target: {fileID: 2326892727568724535, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
-      propertyPath: m_StepOffset
-      value: 0.5
-      objectReference: {fileID: 0}
     - target: {fileID: 2457935812145070645, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -1097,17 +1089,45 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
-      propertyPath: _gravity
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
-      propertyPath: _jumpSpeed
-      value: 0.7
+      propertyPath: _boostSpeed
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _sprintSpeed
-      value: 18
+      value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: ShapeModule.type
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: TrailModule.enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: EmissionModule.enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: ShapeModule.radiusThickness
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: TrailModule.lifetime.scalar
+      value: 0.42
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699804108959935543, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: TrailModule.sizeAffectsWidth
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9075301853056464548, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9075301853056464548, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: m_Materials.Array.data[1]
+      value: 
+      objectReference: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
 --- !u!1001 &9216015243443254962
