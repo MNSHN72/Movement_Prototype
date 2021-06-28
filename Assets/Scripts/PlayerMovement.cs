@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Cinemachine;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] private Vector3 _defaultPosition = Vector3.up;
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _sprintSpeed = 8f;
     [SerializeField] private float _currentSpeed = 5f;
@@ -35,12 +36,17 @@ public class PlayerMovement : MonoBehaviour
             ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
             emissionModule.enabled = true;
             _currentSpeed = _sprintSpeed;
+
         }
         else
         {
             ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
             emissionModule.enabled = false;
             _currentSpeed = _moveSpeed;
+        }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
     private void FixedUpdate()
