@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _currentSpeed = 5f;
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
+    [SerializeField] private ParticleSystem _sprintParticles;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _viewingVector;
@@ -18,6 +20,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
+        _sprintParticles = _playerModel.transform.GetChild(2).gameObject.GetComponent<ParticleSystem>(); ;
     }
     private void Update()
     {
@@ -27,12 +30,16 @@ public class PlayerMovement : MonoBehaviour
         {
             PlayerJumped = true;
         }
-        if (Input.GetButton("Sprint"))
+        if (_characterController.velocity != Vector3.zero && Input.GetButton("Sprint"))
         {
+            ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
+            emissionModule.enabled = true;
             _currentSpeed = _sprintSpeed;
         }
         else
         {
+            ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
+            emissionModule.enabled = false;
             _currentSpeed = _moveSpeed;
         }
     }
