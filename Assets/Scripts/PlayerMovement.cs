@@ -26,10 +26,26 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInput _playerInput;
     private void OnEnable()
     {
+        _playerInput = new PlayerInput();
+        _playerInput.CharacterControls.Move.performed += MoveHandler;
+        _playerInput.CharacterControls.Move.canceled += MoveHandler;
+        _playerInput.CharacterControls.Jump.started += JumpHandler;
+        _playerInput.CharacterControls.Sprint.started += SprintHandler;
+        _playerInput.CharacterControls.Sprint.canceled += SprintHandler;
+        _playerInput.CharacterControls.ReloadCurrentScene.started += context =>
+        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
         _playerInput.CharacterControls.Enable();
     }
     private void OnDisable()
     {
+        _playerInput = new PlayerInput();
+        _playerInput.CharacterControls.Move.performed -= MoveHandler;
+        _playerInput.CharacterControls.Move.canceled -= MoveHandler;
+        _playerInput.CharacterControls.Jump.started -= JumpHandler;
+        _playerInput.CharacterControls.Sprint.started -= SprintHandler;
+        _playerInput.CharacterControls.Sprint.canceled -= SprintHandler;
+        _playerInput.CharacterControls.ReloadCurrentScene.started -= context =>
+        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
         _playerInput.CharacterControls.Disable();
     }
 
@@ -39,15 +55,6 @@ public class PlayerMovement : MonoBehaviour
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
         _sprintParticles = _playerModel.transform.GetChild(2).gameObject.GetComponent<ParticleSystem>(); ;
-
-        _playerInput = new PlayerInput();
-        _playerInput.CharacterControls.Move.performed += MoveHandler;
-        _playerInput.CharacterControls.Move.canceled += MoveHandler;
-        _playerInput.CharacterControls.Jump.started += JumpHandler;
-        _playerInput.CharacterControls.Sprint.started += SprintHandler;
-        _playerInput.CharacterControls.Sprint.canceled += SprintHandler;
-        _playerInput.CharacterControls.ReloadCurrentScene.started += context =>
-        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
     }
 
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
