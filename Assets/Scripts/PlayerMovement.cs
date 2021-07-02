@@ -5,27 +5,42 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
-{
+{   
+    
+    private CharacterController _characterController;
+
+    //movement related fields
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _sprintSpeed = 8f;
     [SerializeField] private float _currentSpeed = 5f;
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
-    [SerializeField] private ParticleSystem _sprintParticles;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
-    private Vector3 _viewingVector;
-    private Transform _playerModel;
-    private CharacterController _characterController;
 
     private bool _playerIsMoving;
     private bool _playerJumped;
     private bool _playerIsSprinting;
 
+    //animation related fields?
+    private Vector3 _viewingVector;
+    private Transform _playerModel;
+
+    //particle effect related fields
+    [SerializeField] private Transform _particleSystemParent;
+    [SerializeField] private List<ParticleSystem> _particleSystems= new List<ParticleSystem>();
+        //0 Sprint particles
+        //1 boost particles
+
+
+
+
+
     private PlayerInput _playerInput;
     private void OnEnable()
     {
+        //enable player controls
         _playerInput = new PlayerInput();
         _playerInput.CharacterControls.Move.performed += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
@@ -38,6 +53,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void OnDisable()
     {
+        //disable player controls
         _playerInput = new PlayerInput();
         _playerInput.CharacterControls.Move.performed -= MoveHandler;
         _playerInput.CharacterControls.Move.canceled -= MoveHandler;
@@ -54,22 +70,27 @@ public class PlayerMovement : MonoBehaviour
         _currentSpeed = _moveSpeed;
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
-        _sprintParticles = _playerModel.transform.GetChild(2).gameObject.GetComponent<ParticleSystem>(); ;
+        CacheParticleSystems();
     }
-
+    private void CacheParticleSystems() 
+    {
+        _particleSystemParent = transform.GetChild(1);
+        foreach (Transform child in _particleSystemParent) 
+        {
+            _particleSystems.Add(child.GetComponent<ParticleSystem>());
+        }
+    }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (_characterController.velocity != Vector3.zero && context.started == true)
         {
-            ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
-            emissionModule.enabled = true;
+            //turn sprint particles on
             _currentSpeed = _sprintSpeed;
             _playerIsSprinting = true;
         }
         else
         {
-            ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
-            emissionModule.enabled = false;
+            //turn sprint particles off
             _currentSpeed = _moveSpeed;
             _playerIsSprinting = false;
         }
@@ -84,47 +105,48 @@ public class PlayerMovement : MonoBehaviour
     }
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
+        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
         if (context.performed == true)
         {
             if (_playerIsSprinting)
             {
-                ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
-                emissionModule.enabled = true;
+                //turn sprint particles on
             }
-            _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
             _playerIsMoving = true;
         }
         else
         {
-            ParticleSystem.EmissionModule emissionModule = _sprintParticles.emission;
-            emissionModule.enabled = false;
-            _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+            //turn sprint particles off
             _playerIsMoving = false;
         }
     }
 
     private void Update()
     {
-        //Debug.Log(_characterController.isGrounded);
         Debug.Log(_characterController.velocity);
-
-        //if (Input.GetKeyDown(KeyCode.P))
-        //{
-        //    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        //}
     }
 
 
 
     private void FixedUpdate()
     {
+        ProccessMoveDirection();
+        ProccessJump();
+        ProccessCharacterModelRotation();
 
+        _characterController.Move(_moveDirection);
+
+    }
+
+    private void ProccessMoveDirection()
+    {
         Vector3 transformDirection = transform.TransformDirection(_inputDirection);
-
         Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
-
         _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
+    }
 
+    private void ProccessJump()
+    {
         if (_playerJumped)
         {
             _moveDirection.y = _jumpSpeed;
@@ -134,17 +156,14 @@ public class PlayerMovement : MonoBehaviour
         {
             _moveDirection.y -= _gravity * Time.deltaTime;
         }
+    }
 
+    private void ProccessCharacterModelRotation()
+    {
         _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
         }
-
-        _characterController.Move(_moveDirection);
-
     }
-
-
-
 }
