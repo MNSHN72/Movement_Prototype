@@ -43,7 +43,7 @@
                     "name": "",
                     "id": "84bcbc07-c5cf-40fe-afb6-8bf3efafe4a0",
                     "path": "<DualShockGamepad>/leftStick",
-                    "interactions": "Hold",
+                    "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "Move",

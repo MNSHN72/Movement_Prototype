@@ -41,6 +41,14 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""ReloadCurrentScene"",
+                    ""type"": ""Button"",
+                    ""id"": ""4262bd37-1f2d-4860-a984-74d0e79cd79a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -59,7 +67,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""name"": ""2D Vector"",
                     ""id"": ""15914e71-2f74-454f-97cf-e593d1b1e25f"",
                     ""path"": ""2DVector"",
-                    ""interactions"": """",
+                    ""interactions"": ""Press(behavior=2)"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Move"",
@@ -153,6 +161,17 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""action"": ""Sprint"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c3b34f2b-e8d8-4ea6-8c69-c0716b67774c"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ReloadCurrentScene"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -164,6 +183,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         m_CharacterControls_Move = m_CharacterControls.FindAction("Move", throwIfNotFound: true);
         m_CharacterControls_Jump = m_CharacterControls.FindAction("Jump", throwIfNotFound: true);
         m_CharacterControls_Sprint = m_CharacterControls.FindAction("Sprint", throwIfNotFound: true);
+        m_CharacterControls_ReloadCurrentScene = m_CharacterControls.FindAction("ReloadCurrentScene", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -216,6 +236,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
     private readonly InputAction m_CharacterControls_Move;
     private readonly InputAction m_CharacterControls_Jump;
     private readonly InputAction m_CharacterControls_Sprint;
+    private readonly InputAction m_CharacterControls_ReloadCurrentScene;
     public struct CharacterControlsActions
     {
         private @PlayerInput m_Wrapper;
@@ -223,6 +244,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         public InputAction @Move => m_Wrapper.m_CharacterControls_Move;
         public InputAction @Jump => m_Wrapper.m_CharacterControls_Jump;
         public InputAction @Sprint => m_Wrapper.m_CharacterControls_Sprint;
+        public InputAction @ReloadCurrentScene => m_Wrapper.m_CharacterControls_ReloadCurrentScene;
         public InputActionMap Get() { return m_Wrapper.m_CharacterControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -241,6 +263,9 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                 @Sprint.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnSprint;
                 @Sprint.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnSprint;
                 @Sprint.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnSprint;
+                @ReloadCurrentScene.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
+                @ReloadCurrentScene.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
+                @ReloadCurrentScene.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
             }
             m_Wrapper.m_CharacterControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -254,6 +279,9 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                 @Sprint.started += instance.OnSprint;
                 @Sprint.performed += instance.OnSprint;
                 @Sprint.canceled += instance.OnSprint;
+                @ReloadCurrentScene.started += instance.OnReloadCurrentScene;
+                @ReloadCurrentScene.performed += instance.OnReloadCurrentScene;
+                @ReloadCurrentScene.canceled += instance.OnReloadCurrentScene;
             }
         }
     }
@@ -263,5 +291,6 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
+        void OnReloadCurrentScene(InputAction.CallbackContext context);
     }
 }
