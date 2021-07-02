@@ -46,8 +46,8 @@ public class PlayerMovement : MonoBehaviour
         _playerInput.CharacterControls.Jump.started += JumpHandler;
         _playerInput.CharacterControls.Sprint.started += SprintHandler;
         _playerInput.CharacterControls.Sprint.canceled += SprintHandler;
-        //_playerInput.CharacterControls.ReloadCurrentScene.started += context =>
-        //{ SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
+        _playerInput.CharacterControls.ReloadCurrentScene.started += context =>
+        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
     }
 
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
