@@ -177,13 +177,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd52e5b04352cb44a92d9d5b260237cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveSpeed: 10
-  _sprintSpeed: 18
+  _characterController: {fileID: 0}
+  _moveSpeed: 15
+  _sprintSpeed: 25
   _currentSpeed: 5
+  _boostSpeed: 50
   _jumpSpeed: 0.7
   _gravity: 2
-  _sprintParticles: {fileID: 0}
+  _boostTime: 0.5
   _moveDirection: {x: 0, y: 0, z: 0}
+  _particleSystemParent: {fileID: 0}
+  _particleSystems: []
 --- !u!1 &3729004971196914875
 GameObject:
   m_ObjectHideFlags: 0
@@ -843,7 +847,7 @@ ParticleSystem:
   ShapeModule:
     serializedVersion: 6
     enabled: 1
-    type: 0
+    type: 4
     angle: 2.63
     length: 5
     boxThickness: {x: 0, y: 0, z: 0}
@@ -4115,7 +4119,7 @@ ParticleSystem:
     lifetime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1
+      scalar: 0.42
       minScalar: 1
       maxCurve:
         serializedVersion: 2

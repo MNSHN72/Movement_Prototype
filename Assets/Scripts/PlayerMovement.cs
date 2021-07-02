@@ -5,16 +5,18 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
-{   
-    
-    private CharacterController _characterController;
+{
+
+    [SerializeField] private CharacterController _characterController;
 
     //movement related fields
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _sprintSpeed = 8f;
     [SerializeField] private float _currentSpeed = 5f;
+    [SerializeField] private float _boostSpeed = 11f;
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
+    [SerializeField] private float _boostTime = .5f;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
@@ -30,47 +32,49 @@ public class PlayerMovement : MonoBehaviour
     //particle effect related fields
     [SerializeField] private Transform _particleSystemParent;
     [SerializeField] private List<ParticleSystem> _particleSystems= new List<ParticleSystem>();
+        //Particle Index
         //0 Sprint particles
         //1 boost particles
 
-
-
-
-
     private PlayerInput _playerInput;
+
+
     private void OnEnable()
     {
+        Debug.Log("enabled");
         //enable player controls
-        _playerInput = new PlayerInput();
         _playerInput.CharacterControls.Move.performed += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
         _playerInput.CharacterControls.Jump.started += JumpHandler;
         _playerInput.CharacterControls.Sprint.started += SprintHandler;
+        _playerInput.CharacterControls.Sprint.performed += SprintHandler;
         _playerInput.CharacterControls.Sprint.canceled += SprintHandler;
-        _playerInput.CharacterControls.ReloadCurrentScene.started += context =>
-        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
+        _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
         _playerInput.CharacterControls.Enable();
     }
     private void OnDisable()
     {
         //disable player controls
-        _playerInput = new PlayerInput();
         _playerInput.CharacterControls.Move.performed -= MoveHandler;
         _playerInput.CharacterControls.Move.canceled -= MoveHandler;
         _playerInput.CharacterControls.Jump.started -= JumpHandler;
         _playerInput.CharacterControls.Sprint.started -= SprintHandler;
         _playerInput.CharacterControls.Sprint.canceled -= SprintHandler;
-        _playerInput.CharacterControls.ReloadCurrentScene.started -= context =>
-        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); };
         _playerInput.CharacterControls.Disable();
     }
 
     private void Awake()
     {
+        _playerInput = new PlayerInput();
+
         _currentSpeed = _moveSpeed;
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
         CacheParticleSystems();
+    }
+    private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     private void CacheParticleSystems() 
     {
@@ -84,18 +88,22 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_characterController.velocity != Vector3.zero && context.started == true)
         {
-            //turn sprint particles on
-            _currentSpeed = _sprintSpeed;
+            TriggerBoostParticles();
+            ToggleSprintParticles(true);
+            _currentSpeed = _boostSpeed;
             _playerIsSprinting = true;
+        }
+        else if (_characterController.velocity != Vector3.zero && context.performed == true)
+        {
+            StartCoroutine(DegradeSpeed());
         }
         else
         {
-            //turn sprint particles off
+            ToggleSprintParticles(false);
             _currentSpeed = _moveSpeed;
             _playerIsSprinting = false;
         }
     }
-
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (_characterController.isGrounded && context.started == true)
@@ -110,24 +118,29 @@ public class PlayerMovement : MonoBehaviour
         {
             if (_playerIsSprinting)
             {
-                //turn sprint particles on
+                ToggleSprintParticles(true);
             }
             _playerIsMoving = true;
         }
         else
         {
-            //turn sprint particles off
+            ToggleSprintParticles(false);
             _playerIsMoving = false;
+        }
+    }
+    IEnumerator DegradeSpeed() 
+    {
+        while (_currentSpeed>_sprintSpeed)
+        {
+            _currentSpeed -= (_boostSpeed - _sprintSpeed) * .2f;
+
+            yield return new WaitForSeconds(.25f*_boostTime);
         }
     }
 
     private void Update()
     {
-        Debug.Log(_characterController.velocity);
     }
-
-
-
     private void FixedUpdate()
     {
         ProccessMoveDirection();
@@ -165,5 +178,16 @@ public class PlayerMovement : MonoBehaviour
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
         }
+    }
+    private void ToggleSprintParticles(bool inBool) 
+    {
+        ParticleSystem.EmissionModule emissionModule = _particleSystems[0].emission;
+        emissionModule.enabled = inBool;
+    }
+    private void TriggerBoostParticles() 
+    {
+        ParticleSystem.EmissionModule emissionModule = _particleSystems[1].emission;
+        emissionModule.enabled = true;
+        _particleSystems[1].Play();
     }
 }
