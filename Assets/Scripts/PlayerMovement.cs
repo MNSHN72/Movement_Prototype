@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _viewingVector;
     private Transform _playerModel;
 
+    private Animator _animator;
+
     //particle effect related fields
     [SerializeField] private Transform _particleSystemParent;
     [SerializeField] private List<ParticleSystem> _particleSystems= new List<ParticleSystem>();
@@ -70,6 +72,7 @@ public class PlayerMovement : MonoBehaviour
         _currentSpeed = _moveSpeed;
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
+        _animator = _playerModel.GetComponentInChildren<Animator>();
         CacheParticleSystems();
     }
     private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -140,7 +143,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        HandleAnimation();
     }
+
+  
+
     private void FixedUpdate()
     {
         ProccessMoveDirection();
@@ -150,7 +157,18 @@ public class PlayerMovement : MonoBehaviour
         _characterController.Move(_moveDirection);
 
     }
-
+    private void HandleAnimation()
+    {
+        bool currentMoveState = _animator.GetBool("isMoving");
+        if (currentMoveState == false && _playerIsMoving == true)
+        {
+            _animator.SetBool("isMoving", true);
+        }
+        if (currentMoveState == true && _playerIsMoving == false)
+        {
+            _animator.SetBool("isMoving", false);
+        }
+    }
     private void ProccessMoveDirection()
     {
         Vector3 transformDirection = transform.TransformDirection(_inputDirection);
