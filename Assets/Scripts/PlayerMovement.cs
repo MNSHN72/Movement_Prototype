@@ -100,8 +100,8 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (_characterController.velocity == Vector3.zero && context.performed== true)
         {
+            _currentSpeed = _sprintSpeed;
             _playerIsSprinting = true;
-            _playerIs
         }
         else if (_characterController.velocity != Vector3.zero && context.performed == true)
         {
