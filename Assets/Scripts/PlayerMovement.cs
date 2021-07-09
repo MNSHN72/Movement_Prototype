@@ -17,6 +17,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
     [SerializeField] private float _boostTime = .5f;
+    [SerializeField] private Vector3 _velocity;
+    [SerializeField] private Vector3 _characterDirection;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
@@ -96,6 +98,11 @@ public class PlayerMovement : MonoBehaviour
             _currentSpeed = _boostSpeed;
             _playerIsSprinting = true;
         }
+        else if (_characterController.velocity == Vector3.zero && context.performed== true)
+        {
+            _playerIsSprinting = true;
+            _playerIs
+        }
         else if (_characterController.velocity != Vector3.zero && context.performed == true)
         {
             StartCoroutine(DegradeSpeed());
@@ -143,6 +150,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        _velocity = _characterController.velocity;
+
         HandleAnimation();
     }
 
@@ -159,14 +168,23 @@ public class PlayerMovement : MonoBehaviour
     }
     private void HandleAnimation()
     {
-        bool currentMoveState = _animator.GetBool("isMoving");
-        if (currentMoveState == false && _playerIsMoving == true)
+        bool animatorMoveBool = _animator.GetBool("isMoving");
+        bool animatorSprintBool = _animator.GetBool("isSprinting");
+        if (animatorMoveBool == false && _playerIsMoving == true)
         {
             _animator.SetBool("isMoving", true);
         }
-        if (currentMoveState == true && _playerIsMoving == false)
+        if (animatorMoveBool == true && _playerIsMoving == false)
         {
             _animator.SetBool("isMoving", false);
+        }
+        if (animatorSprintBool == false && _playerIsSprinting == true)
+        {
+            _animator.SetBool("isSprinting", true);
+        }
+        if (animatorSprintBool == true && _playerIsSprinting == false)
+        {
+            _animator.SetBool("isSprinting", false);
         }
     }
     private void ProccessMoveDirection()
@@ -192,6 +210,7 @@ public class PlayerMovement : MonoBehaviour
     private void ProccessCharacterModelRotation()
     {
         _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
+        _characterDirection = _viewingVector;
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
