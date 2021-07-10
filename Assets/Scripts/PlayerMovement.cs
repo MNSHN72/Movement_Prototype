@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     private bool _playerIsMoving;
     private bool _playerJumped;
     private bool _playerIsSprinting;
+    private bool _playerCanBoost;
 
     //animation related fields?
     private Vector3 _viewingVector;
@@ -98,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
             _currentSpeed = _boostSpeed;
             _playerIsSprinting = true;
         }
-        else if (_characterController.velocity == Vector3.zero && context.performed== true)
+        else if (_characterController.velocity == Vector3.zero && context.performed== true && _currentSpeed > _moveSpeed)
         {
             _currentSpeed = _sprintSpeed;
             _playerIsSprinting = true;
