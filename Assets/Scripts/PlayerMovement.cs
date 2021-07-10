@@ -26,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
     private bool _playerIsMoving;
     private bool _playerJumped;
     private bool _playerIsSprinting;
-    private bool _playerCanBoost;
+    private bool _playerIsBoosting;
 
     //animation related fields?
     private Vector3 _viewingVector;
@@ -43,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerInput _playerInput;
 
-
+    //initialization
     private void OnEnable()
     {
         Debug.Log("enabled");
@@ -78,10 +78,6 @@ public class PlayerMovement : MonoBehaviour
         _animator = _playerModel.GetComponentInChildren<Animator>();
         CacheParticleSystems();
     }
-    private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
     private void CacheParticleSystems() 
     {
         _particleSystemParent = transform.GetChild(1);
@@ -90,14 +86,35 @@ public class PlayerMovement : MonoBehaviour
             _particleSystems.Add(child.GetComponent<ParticleSystem>());
         }
     }
+
+    //update methods
+    private void Update()
+    {
+        _velocity = _characterController.velocity;
+
+        HandleAnimation();
+    }
+    private void FixedUpdate()
+    {
+        ProccessMoveDirection();
+        ProccessJump();
+        ProccessCharacterModelRotation();
+
+        _characterController.Move(_moveDirection);
+
+    }
+
+
+    //inputhandlers
+    private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (_characterController.velocity != Vector3.zero && context.started == true)
-        {
 
-        }
 
-        
         if (_characterController.velocity != Vector3.zero && context.started == true)
         {
             TriggerBoostParticles();
@@ -119,8 +136,9 @@ public class PlayerMovement : MonoBehaviour
             ToggleSprintParticles(false);
             _currentSpeed = _moveSpeed;
             _playerIsSprinting = false;
-        } 
-        
+        }
+
+
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -134,15 +152,10 @@ public class PlayerMovement : MonoBehaviour
         _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
         if (context.performed == true)
         {
-            if (_playerIsSprinting)
-            {
-                ToggleSprintParticles(true);
-            }
             _playerIsMoving = true;
         }
         else
         {
-            ToggleSprintParticles(false);
             _playerIsMoving = false;
         }
     }
@@ -156,24 +169,9 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        _velocity = _characterController.velocity;
 
-        HandleAnimation();
-    }
 
-  
-
-    private void FixedUpdate()
-    {
-        ProccessMoveDirection();
-        ProccessJump();
-        ProccessCharacterModelRotation();
-
-        _characterController.Move(_moveDirection);
-
-    }
+    //movement/animation handlers
     private void HandleAnimation()
     {
         bool animatorMoveBool = _animator.GetBool("isMoving");
@@ -225,6 +223,8 @@ public class PlayerMovement : MonoBehaviour
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
         }
     }
+
+    //misc. methods
     private void ToggleSprintParticles(bool inBool) 
     {
         ParticleSystem.EmissionModule emissionModule = _particleSystems[0].emission;
