@@ -94,12 +94,18 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_characterController.velocity != Vector3.zero && context.started == true)
         {
+
+        }
+
+        
+        if (_characterController.velocity != Vector3.zero && context.started == true)
+        {
             TriggerBoostParticles();
             ToggleSprintParticles(true);
             _currentSpeed = _boostSpeed;
             _playerIsSprinting = true;
         }
-        else if (_characterController.velocity == Vector3.zero && context.performed== true && _currentSpeed > _moveSpeed)
+        else if (_characterController.velocity == Vector3.zero && context.performed == true)
         {
             _currentSpeed = _sprintSpeed;
             _playerIsSprinting = true;
@@ -113,7 +119,8 @@ public class PlayerMovement : MonoBehaviour
             ToggleSprintParticles(false);
             _currentSpeed = _moveSpeed;
             _playerIsSprinting = false;
-        }
+        } 
+        
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -190,8 +197,9 @@ public class PlayerMovement : MonoBehaviour
     }
     private void ProccessMoveDirection()
     {
-        Vector3 transformDirection = transform.TransformDirection(_inputDirection);
-        Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
+        //Vector3 transformDirection = transform.TransformDirection(_inputDirection);
+        //Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
+        Vector3 groundMovement = _currentSpeed * Time.deltaTime * _inputDirection;
         _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
     }
 
