@@ -16,33 +16,25 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _boostSpeed = 11f;
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
-    [SerializeField] private float _boostTime = .5f;
     [SerializeField] private float _inertia = 0.01f;
     [SerializeField] private float _acceleration = 0.01f;
     [SerializeField] private float _decceleration = 0.1f;
 
-    [SerializeField] private Vector3 _velocity;
-    [SerializeField] private Vector3 _characterDirection;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
 
 
-
     private bool _playerIsMoving;
     private bool _playerJumped;
-    private PlayerSpeed _playerSpeedState = PlayerSpeed.Normal;
-    private enum PlayerSpeed
-    {
-        Normal = 0,
-        Fast = 1,
-    }
 
     //animation related fields?
     private Vector3 _viewingVector;
     private Transform _playerModel;
 
     private Animator _animator;
+    private PlayerInput _playerInput;
+
 
     //particle effect related fields
     [SerializeField] private Transform _particleSystemParent;
@@ -51,11 +43,13 @@ public class PlayerMovement : MonoBehaviour
     //0 Sprint particles
     //1 boost particles
 
-    private PlayerInput _playerInput;
 
 
 
     //initialization
+
+
+
     private void Awake()
     {
         _playerInput = new PlayerInput();
@@ -71,6 +65,7 @@ public class PlayerMovement : MonoBehaviour
         Debug.Log("enabled");
         //enable player controls
         _playerInput.CharacterControls.Move.performed += MoveHandler;
+        _playerInput.CharacterControls.Move.started += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
 
         _playerInput.CharacterControls.Jump.started += JumpHandler;
@@ -112,65 +107,34 @@ public class PlayerMovement : MonoBehaviour
     //update methods
     private void Update()
     {
-        _velocity = _characterController.velocity;
-
-        UpdatePlayerSpeedState();
         HandleAnimation();
     }
+
     private void FixedUpdate()
     {
+        ProccessAcceleration();
         MoveCharacter();
     }
+    
+    
     //inputhandlers
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (_playerSpeedState == PlayerSpeed.Normal)
+        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+        if (context.started || context.performed)
         {
-            if (context.canceled == true)
-            {
-                _currentSpeed = _moveSpeed;
-                _playerIsMoving = false;
-                StartCoroutine(DegradeInput());
-            }
-            else
-            {
-                _playerIsMoving = true;
-                _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
-                if (context.performed == true && _currentSpeed < (_sprintSpeed - 1f))
-                {
-                    _currentSpeed += _acceleration * Time.deltaTime;
-                }
-            } 
+            _playerIsMoving = true;
         }
-        if (_playerSpeedState == PlayerSpeed.Fast)
+        if (context.canceled)
         {
-             _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
-            if (context.canceled == true)
-            {
-                _playerIsMoving = false;
-            }
-            else
-            {
-                _playerIsMoving = true;
-            }
+            _playerIsMoving = false;
         }
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (_playerSpeedState == PlayerSpeed.Normal)
+        if (context.started)
         {
-            if (context.started == true && _playerIsMoving == true)
-            {
-                _currentSpeed = _boostSpeed;
-                StartCoroutine(DegradeSpeed());
-            }
-        }
-        if (_playerSpeedState == PlayerSpeed.Fast)
-        {
-            if (context.performed == true && _currentSpeed < _sprintSpeed)
-            {
-                _currentSpeed = _sprintSpeed;
-            }
+            _currentSpeed = _boostSpeed;
         }
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -184,27 +148,6 @@ public class PlayerMovement : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
-    IEnumerator DegradeInput() 
-    {
-        _inputDirection = _playerModel.forward;
-        while (_inputDirection != Vector3.zero && _playerIsMoving == false)
-        {
-            _inputDirection = Vector3.Lerp(_inputDirection, Vector3.zero, _inertia);
-
-            yield return new WaitForEndOfFrame();
-        }
-    }
-    IEnumerator DegradeSpeed() 
-    {
-        while (_currentSpeed > _sprintSpeed)
-        {
-            _currentSpeed -= _decceleration * Time.deltaTime;
-
-            yield return new WaitForEndOfFrame();
-        }
-    }
-
 
 
     //movement/animation handlers
@@ -243,10 +186,11 @@ public class PlayerMovement : MonoBehaviour
         //Vector3 transformDirection = transform.TransformDirection(_inputDirection);
         //Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
 
-        //movehandler gets input direction and sprint  handler manipulates speed
-
+        //movehandler gets input direction 
+        //sprint  handler manipulates speed (RE: NO thats BAD just shove it in the update method stoopid)
+        // the actual movement happens
         Vector3 groundMovement = Vector3.zero;
-        if (_currentSpeed > _sprintSpeed)
+        if (_currentSpeed > _moveSpeed)
         {
             groundMovement = _currentSpeed * Time.deltaTime * Vector3.Normalize(_playerModel.forward + _inputDirection);
         }
@@ -272,26 +216,37 @@ public class PlayerMovement : MonoBehaviour
     private void ProccessCharacterModelRotation()
     {
         _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
-        _characterDirection = _viewingVector;
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
         }
     }
+    private void ProccessAcceleration()
+    {
+        if (_characterController.velocity != Vector3.zero && _currentSpeed > _sprintSpeed)
+        {
+            // deccelerate to sprint speed if moving over sprint speed
+            _currentSpeed -= _decceleration * Time.deltaTime;
+        }
+        if (_characterController.velocity != Vector3.zero && _currentSpeed < _sprintSpeed)
+        {
+            // accelerate to sprint speed if moving under sprint speed
+            _currentSpeed += _acceleration * Time.deltaTime;
+        }
+        //decceleration when not moving
+        if (_playerIsMoving == false && _currentSpeed > _sprintSpeed)
+        {
+            _currentSpeed -= _decceleration * Time.deltaTime;
+        }
+        if (_playerIsMoving == false && _moveSpeed < _currentSpeed && _currentSpeed < _sprintSpeed)
+        {
+            //adjust with some kind of formula idk
+            _currentSpeed -= _inertia * Time.deltaTime;
+        }
+    }
 
     //misc. methods
-    private void UpdatePlayerSpeedState() 
-    {
-        if (_currentSpeed < _sprintSpeed)
-        {
-            _playerSpeedState = PlayerSpeed.Normal;
-        }
-        else if (_currentSpeed >= _sprintSpeed)
-        {
-            _playerSpeedState = PlayerSpeed.Fast;
-        }
 
-    }
     private void ToggleSprintParticles(bool inBool)
     {
         ParticleSystem.EmissionModule emissionModule = _particleSystems[0].emission;

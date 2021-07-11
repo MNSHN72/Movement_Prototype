@@ -1153,8 +1153,12 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: _gravity
+      value: 2.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _inertia
-      value: 0.025
+      value: 41
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _boostTime
@@ -1170,7 +1174,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _boostSpeed
-      value: 80
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _sprintSpeed
@@ -1178,11 +1182,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _acceleration
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _decceleration
-      value: 50
+      value: 70
       objectReference: {fileID: 0}
     - target: {fileID: 3975891298171880331, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: m_Materials.Array.data[0]
