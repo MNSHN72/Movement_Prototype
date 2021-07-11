@@ -16,10 +16,13 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _boostSpeed = 11f;
     [SerializeField] private float _jumpSpeed = 1f;
     [SerializeField] private float _gravity = .25f;
-    [SerializeField] private float _inertia = 0.01f;
+    [SerializeField] private float _normalDecceleration = 0.01f;
     [SerializeField] private float _acceleration = 0.01f;
-    [SerializeField] private float _decceleration = 0.1f;
+    [SerializeField] private float _boostDecceleration = 0.1f;
+    [SerializeField] private float _inertia = 0.1f;
 
+
+    [SerializeField] private Vector3 _velocity;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
@@ -36,18 +39,11 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInput _playerInput;
 
 
-    //particle effect related fields
-    [SerializeField] private Transform _particleSystemParent;
-    [SerializeField] private List<ParticleSystem> _particleSystems = new List<ParticleSystem>();
-    //Particle Index
-    //0 Sprint particles
-    //1 boost particles
+    //Effect related fields
 
-
-
+    private TrailRenderer _trail;
 
     //initialization
-
 
 
     private void Awake()
@@ -58,7 +54,9 @@ public class PlayerMovement : MonoBehaviour
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
         _animator = _playerModel.GetComponentInChildren<Animator>();
-        CacheParticleSystems();
+
+        _trail = this.gameObject.transform.GetChild(1).GetComponentInChildren<TrailRenderer>();
+
     }
     private void OnEnable()
     {
@@ -76,6 +74,7 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
         _playerInput.CharacterControls.Enable();
+
     }
     private void OnDisable()
     {
@@ -92,21 +91,16 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled -= ReloadHandler;
         _playerInput.CharacterControls.Disable();
-    }
 
-    //initialization helpers
-    private void CacheParticleSystems()
-    {
-        _particleSystemParent = transform.GetChild(1);
-        foreach (Transform child in _particleSystemParent)
-        {
-            _particleSystems.Add(child.GetComponent<ParticleSystem>());
-        }
+        StopAllCoroutines();
     }
 
     //update methods
     private void Update()
     {
+        _velocity = _characterController.velocity;
+        _trail.time = (_currentSpeed * (0.2f / _boostSpeed));
+        Debug.Log(_inputDirection);
         HandleAnimation();
     }
 
@@ -134,7 +128,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (context.started)
         {
-            _currentSpeed = _boostSpeed;
+            if (_currentSpeed <= (_sprintSpeed + 5f))
+            {
+                _currentSpeed = _boostSpeed;
+            }
         }
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -153,16 +150,19 @@ public class PlayerMovement : MonoBehaviour
     //movement/animation handlers
     private void HandleAnimation()
     {
-        bool animatorMoveBool = _animator.GetBool("isMoving");
+        _animator.SetFloat("playerSpeed", ((_currentSpeed - 15f) / (_boostSpeed - 15f)));
+
+    //old code
+        //bool animatorMoveBool = _animator.GetBool("isMoving");
         //bool animatorSprintBool = _animator.GetBool("isSprinting");
-        if (animatorMoveBool == false && _playerIsMoving == true)
-        {
-            _animator.SetBool("isMoving", true);
-        }
-        if (animatorMoveBool == true && _playerIsMoving == false)
-        {
-            _animator.SetBool("isMoving", false);
-        }
+        //if (animatorMoveBool == false && _playerIsMoving == true)
+        //{
+        //    _animator.SetBool("isMoving", true);
+        //}
+        //if (animatorMoveBool == true && _playerIsMoving == false)
+        //{
+        //    _animator.SetBool("isMoving", false);
+        //}
         //if (animatorSprintBool == false && _playerIsSprinting == true)
         //{
         //    _animator.SetBool("isSprinting", true);
@@ -189,17 +189,22 @@ public class PlayerMovement : MonoBehaviour
         //movehandler gets input direction 
         //sprint  handler manipulates speed (RE: NO thats BAD just shove it in the update method stoopid)
         // the actual movement happens
-        Vector3 groundMovement = Vector3.zero;
-        if (_currentSpeed > _moveSpeed)
-        {
-            groundMovement = _currentSpeed * Time.deltaTime * Vector3.Normalize(_playerModel.forward + _inputDirection);
-        }
-        else
-        {
-            groundMovement = _currentSpeed * Time.deltaTime * _inputDirection;
-        }
 
-        _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
+        Vector3 groundMovement = Vector3.zero;
+        while (true)
+        {
+            if (_currentSpeed >= _moveSpeed)
+            {
+                groundMovement = _currentSpeed * Time.DeltaTime * ProccessInputs();
+            }
+            else
+            {
+                groundMovement = _currentSpeed * Time.DeltaTime * _inputDirection;
+            }
+
+            _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
+
+        }
     }
     private void ProccessJump()
     {
@@ -226,7 +231,7 @@ public class PlayerMovement : MonoBehaviour
         if (_characterController.velocity != Vector3.zero && _currentSpeed > _sprintSpeed)
         {
             // deccelerate to sprint speed if moving over sprint speed
-            _currentSpeed -= _decceleration * Time.deltaTime;
+            _currentSpeed -= _boostDecceleration * Time.deltaTime;
         }
         if (_characterController.velocity != Vector3.zero && _currentSpeed < _sprintSpeed)
         {
@@ -236,26 +241,17 @@ public class PlayerMovement : MonoBehaviour
         //decceleration when not moving
         if (_playerIsMoving == false && _currentSpeed > _sprintSpeed)
         {
-            _currentSpeed -= _decceleration * Time.deltaTime;
+            _currentSpeed -= _boostDecceleration * Time.deltaTime;
         }
         if (_playerIsMoving == false && _moveSpeed < _currentSpeed && _currentSpeed < _sprintSpeed)
         {
             //adjust with some kind of formula idk
-            _currentSpeed -= _inertia * Time.deltaTime;
+            _currentSpeed -= _normalDecceleration * Time.deltaTime;
         }
     }
-
-    //misc. methods
-
-    private void ToggleSprintParticles(bool inBool)
+    private Vector3 ProccessInputs() 
     {
-        ParticleSystem.EmissionModule emissionModule = _particleSystems[0].emission;
-        emissionModule.enabled = inBool;
+        return Vector3.Normalize(Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia));
     }
-    private void TriggerBoostParticles()
-    {
-        ParticleSystem.EmissionModule emissionModule = _particleSystems[1].emission;
-        emissionModule.enabled = true;
-        _particleSystems[1].Play();
-    }
+
 }
