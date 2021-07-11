@@ -21,9 +21,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _acceleration = 0.01f;
     [SerializeField] private float _decceleration = 0.1f;
 
-    [SerializeField] private Vector3 _velocity;
-    [SerializeField] private Vector3 _characterDirection;
-
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
 
@@ -71,6 +68,7 @@ public class PlayerMovement : MonoBehaviour
         Debug.Log("enabled");
         //enable player controls
         _playerInput.CharacterControls.Move.performed += MoveHandler;
+        _playerInput.CharacterControls.Move.started += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
 
         _playerInput.CharacterControls.Jump.started += JumpHandler;
@@ -112,8 +110,6 @@ public class PlayerMovement : MonoBehaviour
     //update methods
     private void Update()
     {
-        _velocity = _characterController.velocity;
-
         UpdatePlayerSpeedState();
         HandleAnimation();
     }
@@ -130,16 +126,15 @@ public class PlayerMovement : MonoBehaviour
             {
                 _currentSpeed = _moveSpeed;
                 _playerIsMoving = false;
-                StartCoroutine(DegradeInput());
+            }
+            if (context.started == true)
+            {
+                _playerIsMoving = true;
+                StartCoroutine(AccelerateToSprint());
             }
             else
             {
-                _playerIsMoving = true;
                 _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
-                if (context.performed == true && _currentSpeed < (_sprintSpeed - 1f))
-                {
-                    _currentSpeed += _acceleration * Time.deltaTime;
-                }
             } 
         }
         if (_playerSpeedState == PlayerSpeed.Fast)
@@ -159,7 +154,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_playerSpeedState == PlayerSpeed.Normal)
         {
-            if (context.started == true && _playerIsMoving == true)
+            if (context.started == true /*&& _playerIsMoving == true*/)
             {
                 _currentSpeed = _boostSpeed;
                 StartCoroutine(DegradeSpeed());
@@ -185,31 +180,47 @@ public class PlayerMovement : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    IEnumerator DegradeInput() 
-    {
-        _inputDirection = _playerModel.forward;
-        while (_inputDirection != Vector3.zero && _playerIsMoving == false)
-        {
-            _inputDirection = Vector3.Lerp(_inputDirection, Vector3.zero, _inertia);
+    //IEnumerator DegradeInput() 
+    //{
+    //    Debug.Log("howdy");
+    //    _inputDirection = _playerModel.forward;
+    //    while ( _playerIsMoving == false)
+    //    {
+    //        _inputDirection = Vector3.Lerp(_inputDirection, Vector3.zero, _inertia);
 
-            yield return new WaitForEndOfFrame();
-        }
-    }
+    //        yield return new WaitForEndOfFrame();
+    //    }
+    //}
     IEnumerator DegradeSpeed() 
     {
-        while (_currentSpeed > _sprintSpeed)
+        while (_currentSpeed > _moveSpeed)
         {
             _currentSpeed -= _decceleration * Time.deltaTime;
 
+            if (_playerSpeedState == PlayerSpeed.Normal && _playerIsMoving == false)
+            {
+                _currentSpeed -= _inertia * Time.deltaTime;
+            }
+
             yield return new WaitForEndOfFrame();
         }
     }
+    IEnumerator AccelerateToSprint() 
+    {
+        while (_currentSpeed < (_sprintSpeed - 1f) && _playerIsMoving == true)
+        {
+            _currentSpeed += _acceleration * Time.deltaTime;
 
+            yield return new WaitForEndOfFrame();
+        }
+    }
 
 
     //movement/animation handlers
     private void HandleAnimation()
     {
+        _animator.SetFloat("playerSpeed", ((_currentSpeed - 15f) / _boostSpeed));
+
         bool animatorMoveBool = _animator.GetBool("isMoving");
         //bool animatorSprintBool = _animator.GetBool("isSprinting");
         if (animatorMoveBool == false && _playerIsMoving == true)
@@ -246,7 +257,7 @@ public class PlayerMovement : MonoBehaviour
         //movehandler gets input direction and sprint  handler manipulates speed
 
         Vector3 groundMovement = Vector3.zero;
-        if (_currentSpeed > _sprintSpeed)
+        if (_currentSpeed > _moveSpeed)
         {
             groundMovement = _currentSpeed * Time.deltaTime * Vector3.Normalize(_playerModel.forward + _inputDirection);
         }
@@ -272,7 +283,6 @@ public class PlayerMovement : MonoBehaviour
     private void ProccessCharacterModelRotation()
     {
         _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
-        _characterDirection = _viewingVector;
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
