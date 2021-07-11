@@ -10,15 +10,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private CharacterController _characterController;
 
     //movement related fields
-    [SerializeField] private float _moveSpeed = 5f;
-    [SerializeField] private float _sprintSpeed = 8f;
+    [SerializeField] private float _moveSpeed = 15f;
+    [SerializeField] private float _sprintSpeed = 30f;
     [SerializeField] private float _currentSpeed = 5f;
-    [SerializeField] private float _boostSpeed = 11f;
+    [SerializeField] private float _boostSpeed = 90f;
     [SerializeField] private float _jumpSpeed = 1f;
-    [SerializeField] private float _gravity = .25f;
-    [SerializeField] private float _inertia = 0.01f;
-    [SerializeField] private float _acceleration = 0.01f;
-    [SerializeField] private float _decceleration = 0.1f;
+    [SerializeField] private float _gravity = 2.2f;
+    [SerializeField] private float _normalDecceleration = 40f;
+    [SerializeField] private float _acceleration = 5f;
+    [SerializeField] private float _boostDecceleration = 70f;
+    [SerializeField] private float _inertia = 0.3f;
 
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
@@ -36,18 +37,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInput _playerInput;
 
 
-    //particle effect related fields
-    [SerializeField] private Transform _particleSystemParent;
-    [SerializeField] private List<ParticleSystem> _particleSystems = new List<ParticleSystem>();
-    //Particle Index
-    //0 Sprint particles
-    //1 boost particles
-
-
-
-
-    //initialization
-
+    private TrailRenderer _trail;
 
 
     private void Awake()
@@ -58,14 +48,15 @@ public class PlayerMovement : MonoBehaviour
         _playerModel = transform.GetChild(0);
         _characterController = GetComponent<CharacterController>();
         _animator = _playerModel.GetComponentInChildren<Animator>();
-        CacheParticleSystems();
+
+        _trail = transform.GetChild(1).GetComponentInChildren<TrailRenderer>();
     }
     private void OnEnable()
     {
         Debug.Log("enabled");
         //enable player controls
         _playerInput.CharacterControls.Move.performed += MoveHandler;
-        _playerInput.CharacterControls.Move.started += MoveHandler;
+        //_playerInput.CharacterControls.Move.started += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
 
         _playerInput.CharacterControls.Jump.started += JumpHandler;
@@ -81,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
     {
         //disable player controls
         _playerInput.CharacterControls.Move.performed -= MoveHandler;
-        _playerInput.CharacterControls.Move.started -= MoveHandler;
+        //_playerInput.CharacterControls.Move.started -= MoveHandler;
         _playerInput.CharacterControls.Move.canceled -= MoveHandler;
 
         _playerInput.CharacterControls.Jump.started -= JumpHandler;
@@ -94,25 +85,17 @@ public class PlayerMovement : MonoBehaviour
         _playerInput.CharacterControls.Disable();
     }
 
-    //initialization helpers
-    private void CacheParticleSystems()
-    {
-        _particleSystemParent = transform.GetChild(1);
-        foreach (Transform child in _particleSystemParent)
-        {
-            _particleSystems.Add(child.GetComponent<ParticleSystem>());
-        }
-    }
 
     //update methods
     private void Update()
     {
+        _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
         HandleAnimation();
     }
 
     private void FixedUpdate()
     {
-        ProccessAcceleration();
+        ProcessAcceleration();
         MoveCharacter();
     }
     
@@ -134,7 +117,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (context.started)
         {
-            _currentSpeed = _boostSpeed;
+            if (_currentSpeed < _sprintSpeed + 5f)
+            {
+                _currentSpeed = _boostSpeed;
+            }
         }
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -175,13 +161,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void MoveCharacter()
     {
-        ProccessMoveDirection();
-        ProccessJump();
-        ProccessCharacterModelRotation();
+        ProcessMoveDirection();
+        ProcessJump();
+        ProcessCharacterModelRotation();
 
         _characterController.Move(_moveDirection);
     }
-    private void ProccessMoveDirection()
+    private void ProcessMoveDirection()
     {
         //Vector3 transformDirection = transform.TransformDirection(_inputDirection);
         //Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
@@ -190,9 +176,9 @@ public class PlayerMovement : MonoBehaviour
         //sprint  handler manipulates speed (RE: NO thats BAD just shove it in the update method stoopid)
         // the actual movement happens
         Vector3 groundMovement = Vector3.zero;
-        if (_currentSpeed > _moveSpeed)
+        if (_currentSpeed >= _moveSpeed)
         {
-            groundMovement = _currentSpeed * Time.deltaTime * Vector3.Normalize(_playerModel.forward + _inputDirection);
+            groundMovement = _currentSpeed * Time.deltaTime * ProcessInputs();
         }
         else
         {
@@ -201,7 +187,7 @@ public class PlayerMovement : MonoBehaviour
 
         _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
     }
-    private void ProccessJump()
+    private void ProcessJump()
     {
         if (_playerJumped)
         {
@@ -213,20 +199,20 @@ public class PlayerMovement : MonoBehaviour
             _moveDirection.y -= _gravity * Time.deltaTime;
         }
     }
-    private void ProccessCharacterModelRotation()
+    private void ProcessCharacterModelRotation()
     {
-        _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
+        _viewingVector = new Vector3(_inputDirection.x, 0f, _inputDirection.z);
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
         }
     }
-    private void ProccessAcceleration()
+    private void ProcessAcceleration()
     {
         if (_characterController.velocity != Vector3.zero && _currentSpeed > _sprintSpeed)
         {
             // deccelerate to sprint speed if moving over sprint speed
-            _currentSpeed -= _decceleration * Time.deltaTime;
+            _currentSpeed -= _boostDecceleration * Time.deltaTime;
         }
         if (_characterController.velocity != Vector3.zero && _currentSpeed < _sprintSpeed)
         {
@@ -236,26 +222,22 @@ public class PlayerMovement : MonoBehaviour
         //decceleration when not moving
         if (_playerIsMoving == false && _currentSpeed > _sprintSpeed)
         {
-            _currentSpeed -= _decceleration * Time.deltaTime;
+            _currentSpeed -= _boostDecceleration * Time.deltaTime;
         }
         if (_playerIsMoving == false && _moveSpeed < _currentSpeed && _currentSpeed < _sprintSpeed)
         {
             //adjust with some kind of formula idk
-            _currentSpeed -= _inertia * Time.deltaTime;
+            _currentSpeed -= _normalDecceleration * Time.deltaTime;
         }
     }
 
-    //misc. methods
+    private void ProcessInertia() 
+    {
+    }
+    private Vector3 ProcessInputs() 
+    {
+        Debug.Log(Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia));
+        return Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia);
+    }
 
-    private void ToggleSprintParticles(bool inBool)
-    {
-        ParticleSystem.EmissionModule emissionModule = _particleSystems[0].emission;
-        emissionModule.enabled = inBool;
-    }
-    private void TriggerBoostParticles()
-    {
-        ParticleSystem.EmissionModule emissionModule = _particleSystems[1].emission;
-        emissionModule.enabled = true;
-        _particleSystems[1].Play();
-    }
 }
