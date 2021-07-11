@@ -38,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     private TrailRenderer _trail;
+    private ParticleSystem _ring;
 
 
     private void Awake()
@@ -49,14 +50,15 @@ public class PlayerMovement : MonoBehaviour
         _characterController = GetComponent<CharacterController>();
         _animator = _playerModel.GetComponentInChildren<Animator>();
 
-        _trail = transform.GetChild(1).GetComponentInChildren<TrailRenderer>();
+        _trail = transform.GetChild(1).GetChild(0).GetComponent<TrailRenderer>();
+        _ring = transform.GetChild(1).GetChild(1).GetComponent<ParticleSystem>();
     }
     private void OnEnable()
     {
         Debug.Log("enabled");
         //enable player controls
         _playerInput.CharacterControls.Move.performed += MoveHandler;
-        //_playerInput.CharacterControls.Move.started += MoveHandler;
+        _playerInput.CharacterControls.Move.started += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
 
         _playerInput.CharacterControls.Jump.started += JumpHandler;
@@ -72,7 +74,7 @@ public class PlayerMovement : MonoBehaviour
     {
         //disable player controls
         _playerInput.CharacterControls.Move.performed -= MoveHandler;
-        //_playerInput.CharacterControls.Move.started -= MoveHandler;
+        _playerInput.CharacterControls.Move.started -= MoveHandler;
         _playerInput.CharacterControls.Move.canceled -= MoveHandler;
 
         _playerInput.CharacterControls.Jump.started -= JumpHandler;
@@ -103,7 +105,6 @@ public class PlayerMovement : MonoBehaviour
     //inputhandlers
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
         if (context.started || context.performed)
         {
             _playerIsMoving = true;
@@ -112,6 +113,7 @@ public class PlayerMovement : MonoBehaviour
         {
             _playerIsMoving = false;
         }
+        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -119,6 +121,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (_currentSpeed < _sprintSpeed + 5f)
             {
+                _ring.Play();
                 _currentSpeed = _boostSpeed;
             }
         }
@@ -220,7 +223,7 @@ public class PlayerMovement : MonoBehaviour
             _currentSpeed += _acceleration * Time.deltaTime;
         }
         //decceleration when not moving
-        if (_playerIsMoving == false && _currentSpeed > _sprintSpeed)
+        if (_playerIsMoving == false && _currentSpeed >= _sprintSpeed)
         {
             _currentSpeed -= _boostDecceleration * Time.deltaTime;
         }
@@ -231,9 +234,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void ProcessInertia() 
-    {
-    }
     private Vector3 ProcessInputs() 
     {
         Debug.Log(Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia));
