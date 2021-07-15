@@ -14,7 +14,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _sprintSpeed = 30f;
     [SerializeField] private float _currentSpeed = 5f;
     [SerializeField] private float _boostSpeed = 90f;
-    [SerializeField] private float _jumpSpeed = 1f;
+    [SerializeField] private float _jumpSpeedClamp = 60f;
+    [SerializeField] private float _jumpForce = 1f;
     [SerializeField] private float _gravity = 2.2f;
     [SerializeField] private float _normalDecceleration = 40f;
     [SerializeField] private float _acceleration = 5f;
@@ -26,6 +27,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
 
+
+    private bool _airDashAvailable = true;
+    private bool _doubleJumpAvailable = true;
 
     private bool _playerIsMoving;
     private bool _playerJumped;
@@ -98,6 +102,9 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleAnimation();
 
+        //debug
+        Debug.Log(_inputDirection);
+
         //placeholder
         _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
 
@@ -109,10 +116,11 @@ public class PlayerMovement : MonoBehaviour
         ProcessForwardDirection();
         MoveCharacter();
     }
-    
+
     //inputhandlers
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
+        //setting the bool values for _playerIsmoving which is meant to return true while the player is inputing movement
         if (context.started || context.performed)
         {
             _playerIsMoving = true;
@@ -121,11 +129,15 @@ public class PlayerMovement : MonoBehaviour
         {
             _playerIsMoving = false;
         }
+
+        //sets player input to _inputdirection vector3 to use later
         _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (context.started)
+
+        //sets current speed to boost speed when sprint button is pressed while below certain speed threshold
+        if (context.started && _characterController.isGrounded)
         {
             if (_currentSpeed < _sprintSpeed + 5f)
             {
@@ -136,9 +148,30 @@ public class PlayerMovement : MonoBehaviour
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
+        //if player presses jump button while grounded
         if (_characterController.isGrounded && context.started == true)
         {
+            // if speed is above jumpspeedclamp value clamp it down
+            // made it to make boost jump a bit less crazy
+            if (_currentSpeed > _jumpSpeedClamp)
+            {
+                _currentSpeed = _jumpSpeedClamp;
+            }
             _playerJumped = true;
+        }
+
+        //initiates double jump when appropriate
+        else if (_doubleJumpAvailable && _characterController.isGrounded == false && context.started == true)
+        {
+            _ring.Play();
+            _playerJumped = true;
+            _doubleJumpAvailable = false;
+        }
+        //resets aerial movement resources when on ground
+        else if (_characterController.isGrounded == true)
+        {
+            _doubleJumpAvailable = true;
+            _airDashAvailable = true;
         }
     }
     private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -170,6 +203,7 @@ public class PlayerMovement : MonoBehaviour
         //}
     }
 
+    //composite method
     private void MoveCharacter()
     {
         ProcessMoveDirection();
@@ -178,19 +212,19 @@ public class PlayerMovement : MonoBehaviour
 
         _characterController.Move(_moveDirection);
     }
+
+    //sets the x and z values for _movementDirection
     private void ProcessMoveDirection()
     {
-        //Vector3 transformDirection = transform.TransformDirection(_inputDirection);
-        //Vector3 groundMovement = _currentSpeed * Time.deltaTime * transformDirection;
-
-        //movehandler gets input direction 
-        //sprint  handler manipulates speed (RE: NO thats BAD just shove it in the update method stoopid)
-        // the actual movement happens
+        //set to zero just in case
         Vector3 groundMovement = Vector3.zero;
-        if (_currentSpeed >= _moveSpeed)
+
+        //if you have speed it does this
+        if (_currentSpeed > _moveSpeed && _characterController.isGrounded)
         {
             groundMovement = _currentSpeed * Time.deltaTime * ProcessInputs();
         }
+        //if you dont it stops basically the only time you'll call this is if you dont move
         else
         {
             groundMovement = _currentSpeed * Time.deltaTime * _inputDirection;
@@ -198,16 +232,29 @@ public class PlayerMovement : MonoBehaviour
 
         _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
     }
+    private Vector3 ProcessInputs()
+    {
+        return Vector3.Slerp(_forward, _inputDirection, _directionalInfluence);
+    }
     private void ProcessJump()
     {
         if (_playerJumped)
         {
-            _moveDirection.y = _jumpSpeed;
+            _moveDirection.y = _jumpForce;
+            if (_currentSpeed > _jumpSpeedClamp)
+            {
+                _currentSpeed = _jumpSpeedClamp;
+            }
             _playerJumped = false;
         }
         else if (_characterController.isGrounded == false)
         {
             _moveDirection.y -= _gravity * Time.deltaTime;
+        }
+        else if (_characterController.isGrounded)
+        {
+            _airDashAvailable = true;
+            _doubleJumpAvailable = true;
         }
     }
     private void ProcessForwardDirection()
@@ -216,6 +263,13 @@ public class PlayerMovement : MonoBehaviour
         {
             _forward = Vector3.Normalize(_characterController.velocity);
         }
+        if (_characterController.velocity == Vector3.zero)
+        {
+            _forward = _playerModel.forward;
+        }
+
+        //might remove later if neccessary
+        _forward.y = 0f;
     }
     private void ProcessCharacterModelRotation()
     {
@@ -241,7 +295,7 @@ public class PlayerMovement : MonoBehaviour
             // accelerate to sprint speed if moving under sprint speed
             _currentSpeed += _acceleration * Time.deltaTime;
         }
-        //decceleration when not moving
+        //decceleration when _playerisMoving == false // no movement input
         if (_playerIsMoving == false && _currentSpeed >= _sprintSpeed)
         {
             _currentSpeed -= _boostDecceleration * Time.deltaTime;
@@ -251,11 +305,11 @@ public class PlayerMovement : MonoBehaviour
             //adjust with some kind of formula idk
             _currentSpeed -= _normalDecceleration * Time.deltaTime;
         }
+        if (_currentSpeed < _moveSpeed)
+        {
+            _currentSpeed = _moveSpeed;
+        }
     }
-    private Vector3 ProcessInputs() 
-    {
-        Debug.Log(Vector3.Slerp(_forward, _inputDirection, _directionalInfluence));
-        return Vector3.Slerp(_forward, _inputDirection, _directionalInfluence);
-    }
+
 
 }

@@ -137,7 +137,8 @@ MonoBehaviour:
   _normalDecceleration: 40
   _acceleration: 0.01
   _boostDecceleration: 70
-  _inertia: 0.01
+  _directionalInfluence: 0.3
+  _forward: {x: 0, y: 0, z: 0}
   _moveDirection: {x: 0, y: 0, z: 0}
 --- !u!1 &2976090627810875263
 GameObject:
@@ -422,6 +423,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
+      propertyPath: autoRandomSeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: moveWithTransform
       value: 1
       objectReference: {fileID: 0}
@@ -451,7 +456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
-      value: 1
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: EmissionModule.m_Bursts.Array.data[0].time
@@ -511,7 +516,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7940805265807931396, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: m_RenderAlignment
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8111978081044263776, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: m_RootOrder
