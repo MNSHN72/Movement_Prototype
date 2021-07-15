@@ -21,6 +21,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _boostDecceleration = 70f;
     [SerializeField] private float _inertia = 0.3f;
 
+    [SerializeField] private Vector3 _forward;
+
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
@@ -50,6 +52,10 @@ public class PlayerMovement : MonoBehaviour
         _characterController = GetComponent<CharacterController>();
         _animator = _playerModel.GetComponentInChildren<Animator>();
 
+        _forward = _playerModel.forward;
+
+
+        //placeholder
         _trail = transform.GetChild(1).GetChild(0).GetComponent<TrailRenderer>();
         _ring = transform.GetChild(1).GetChild(1).GetComponent<ParticleSystem>();
     }
@@ -69,6 +75,7 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
         _playerInput.CharacterControls.Enable();
+
     }
     private void OnDisable()
     {
@@ -85,14 +92,24 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled -= ReloadHandler;
         _playerInput.CharacterControls.Disable();
+
+        StopAllCoroutines();
     }
 
 
     //update methods
     private void Update()
     {
-        _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
         HandleAnimation();
+
+        if (_characterController.velocity != Vector3.zero)
+        {
+            _forward = Vector3.Normalize(_characterController.velocity);
+        }
+
+        //placeholder
+        _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
+
     }
 
     private void FixedUpdate()
@@ -205,9 +222,13 @@ public class PlayerMovement : MonoBehaviour
     private void ProcessCharacterModelRotation()
     {
         _viewingVector = new Vector3(_inputDirection.x, 0f, _inputDirection.z);
+
         if (_viewingVector != Vector3.zero)
         {
             _playerModel.transform.rotation = Quaternion.LookRotation(_viewingVector, Vector3.up);
+
+            //placeholder
+            _ring.transform.rotation = Quaternion.LookRotation(_characterController.velocity);
         }
     }
     private void ProcessAcceleration()
@@ -233,11 +254,10 @@ public class PlayerMovement : MonoBehaviour
             _currentSpeed -= _normalDecceleration * Time.deltaTime;
         }
     }
-
     private Vector3 ProcessInputs() 
     {
-        Debug.Log(Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia));
-        return Vector3.Slerp(_playerModel.forward, _inputDirection, _inertia);
+        Debug.Log(Vector3.Slerp(_forward, _inputDirection, _inertia));
+        return Vector3.Slerp(_forward, _inputDirection, _inertia);
     }
 
 }
