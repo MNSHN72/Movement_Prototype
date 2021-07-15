@@ -19,10 +19,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _normalDecceleration = 40f;
     [SerializeField] private float _acceleration = 5f;
     [SerializeField] private float _boostDecceleration = 70f;
-    [SerializeField] private float _inertia = 0.3f;
+    [SerializeField] private float _directionalInfluence = 0.3f;
 
     [SerializeField] private Vector3 _forward;
-
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
@@ -38,10 +37,8 @@ public class PlayerMovement : MonoBehaviour
     private Animator _animator;
     private PlayerInput _playerInput;
 
-
     private TrailRenderer _trail;
     private ParticleSystem _ring;
-
 
     private void Awake()
     {
@@ -96,16 +93,10 @@ public class PlayerMovement : MonoBehaviour
         StopAllCoroutines();
     }
 
-
     //update methods
     private void Update()
     {
         HandleAnimation();
-
-        if (_characterController.velocity != Vector3.zero)
-        {
-            _forward = Vector3.Normalize(_characterController.velocity);
-        }
 
         //placeholder
         _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
@@ -115,9 +106,9 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         ProcessAcceleration();
+        ProcessForwardDirection();
         MoveCharacter();
     }
-    
     
     //inputhandlers
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -219,9 +210,16 @@ public class PlayerMovement : MonoBehaviour
             _moveDirection.y -= _gravity * Time.deltaTime;
         }
     }
+    private void ProcessForwardDirection()
+    {
+        if (_characterController.velocity != Vector3.zero)
+        {
+            _forward = Vector3.Normalize(_characterController.velocity);
+        }
+    }
     private void ProcessCharacterModelRotation()
     {
-        _viewingVector = new Vector3(_inputDirection.x, 0f, _inputDirection.z);
+        _viewingVector = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
 
         if (_viewingVector != Vector3.zero)
         {
@@ -256,8 +254,8 @@ public class PlayerMovement : MonoBehaviour
     }
     private Vector3 ProcessInputs() 
     {
-        Debug.Log(Vector3.Slerp(_forward, _inputDirection, _inertia));
-        return Vector3.Slerp(_forward, _inputDirection, _inertia);
+        Debug.Log(Vector3.Slerp(_forward, _inputDirection, _directionalInfluence));
+        return Vector3.Slerp(_forward, _inputDirection, _directionalInfluence);
     }
 
 }
