@@ -27,10 +27,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
 
-
-    private bool _airDashAvailable = true;
-    private bool _doubleJumpAvailable = true;
-
     private bool _playerIsMoving;
     private bool _playerJumped;
 
@@ -103,13 +99,12 @@ public class PlayerMovement : MonoBehaviour
         HandleAnimation();
 
         //debug
-        Debug.Log(_inputDirection);
+        Debug.Log(ProcessInputs());
 
         //placeholder
         _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
 
     }
-
     private void FixedUpdate()
     {
         ProcessAcceleration();
@@ -136,7 +131,7 @@ public class PlayerMovement : MonoBehaviour
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
 
-        //sets current speed to boost speed when sprint button is pressed while below certain speed threshold
+        //sets current speed to boost speed when sprint button is pressed while below certain speed threshold and grounded
         if (context.started && _characterController.isGrounded)
         {
             if (_currentSpeed < _sprintSpeed + 5f)
@@ -151,27 +146,7 @@ public class PlayerMovement : MonoBehaviour
         //if player presses jump button while grounded
         if (_characterController.isGrounded && context.started == true)
         {
-            // if speed is above jumpspeedclamp value clamp it down
-            // made it to make boost jump a bit less crazy
-            if (_currentSpeed > _jumpSpeedClamp)
-            {
-                _currentSpeed = _jumpSpeedClamp;
-            }
             _playerJumped = true;
-        }
-
-        //initiates double jump when appropriate
-        else if (_doubleJumpAvailable && _characterController.isGrounded == false && context.started == true)
-        {
-            _ring.Play();
-            _playerJumped = true;
-            _doubleJumpAvailable = false;
-        }
-        //resets aerial movement resources when on ground
-        else if (_characterController.isGrounded == true)
-        {
-            _doubleJumpAvailable = true;
-            _airDashAvailable = true;
         }
     }
     private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -183,6 +158,8 @@ public class PlayerMovement : MonoBehaviour
     //movement/animation handlers
     private void HandleAnimation()
     {
+        //placeholder as af
+
         bool animatorMoveBool = _animator.GetBool("isMoving");
         //bool animatorSprintBool = _animator.GetBool("isSprinting");
         if (animatorMoveBool == false && _playerIsMoving == true)
@@ -213,6 +190,7 @@ public class PlayerMovement : MonoBehaviour
         _characterController.Move(_moveDirection);
     }
 
+    //methods responsible for directional movement
     //sets the x and z values for _movementDirection
     private void ProcessMoveDirection()
     {
@@ -220,7 +198,11 @@ public class PlayerMovement : MonoBehaviour
         Vector3 groundMovement = Vector3.zero;
 
         //if you have speed it does this
-        if (_currentSpeed > _moveSpeed && _characterController.isGrounded)
+        if (_currentSpeed > _moveSpeed)
+        {
+            groundMovement = _currentSpeed * Time.deltaTime * ProcessInputs();
+        }
+        else if (_characterController.isGrounded == false)
         {
             groundMovement = _currentSpeed * Time.deltaTime * ProcessInputs();
         }
@@ -234,28 +216,11 @@ public class PlayerMovement : MonoBehaviour
     }
     private Vector3 ProcessInputs()
     {
+        if (_inputDirection == Vector3.zero)
+        {
+            return Vector3.Slerp(_forward, _forward, _directionalInfluence);
+        }
         return Vector3.Slerp(_forward, _inputDirection, _directionalInfluence);
-    }
-    private void ProcessJump()
-    {
-        if (_playerJumped)
-        {
-            _moveDirection.y = _jumpForce;
-            if (_currentSpeed > _jumpSpeedClamp)
-            {
-                _currentSpeed = _jumpSpeedClamp;
-            }
-            _playerJumped = false;
-        }
-        else if (_characterController.isGrounded == false)
-        {
-            _moveDirection.y -= _gravity * Time.deltaTime;
-        }
-        else if (_characterController.isGrounded)
-        {
-            _airDashAvailable = true;
-            _doubleJumpAvailable = true;
-        }
     }
     private void ProcessForwardDirection()
     {
@@ -263,12 +228,11 @@ public class PlayerMovement : MonoBehaviour
         {
             _forward = Vector3.Normalize(_characterController.velocity);
         }
-        if (_characterController.velocity == Vector3.zero)
+        else if (_characterController.velocity == Vector3.zero)
         {
             _forward = _playerModel.forward;
         }
 
-        //might remove later if neccessary
         _forward.y = 0f;
     }
     private void ProcessCharacterModelRotation()
@@ -283,6 +247,28 @@ public class PlayerMovement : MonoBehaviour
             _ring.transform.rotation = Quaternion.LookRotation(_characterController.velocity);
         }
     }
+
+    private void ProcessJump()
+    {
+        if (_playerJumped)
+        {
+            // if speed is above jumpspeedclamp value clamp it down
+            // made it to make boost jump a bit less crazy
+            if (_currentSpeed > _jumpSpeedClamp && _inputDirection != Vector3.zero)
+            {
+                _currentSpeed = _jumpSpeedClamp;
+            }
+            _moveDirection.y = _jumpForce;
+            _playerJumped = false;
+        }
+
+        //applies gravity while airborne
+        else if (_characterController.isGrounded == false)
+        {
+            _moveDirection.y -= _gravity * Time.deltaTime;
+        }
+    }
+
     private void ProcessAcceleration()
     {
         if (_characterController.velocity != Vector3.zero && _currentSpeed > _sprintSpeed)
@@ -310,6 +296,5 @@ public class PlayerMovement : MonoBehaviour
             _currentSpeed = _moveSpeed;
         }
     }
-
 
 }
