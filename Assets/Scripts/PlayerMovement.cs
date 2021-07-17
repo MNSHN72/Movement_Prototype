@@ -32,6 +32,8 @@ public class PlayerMovement : MonoBehaviour
     private bool _playerIsMoving;
     private bool _playerJumped;
 
+    private bool _doubleJumpAvailable = true;
+
     //animation related fields?
     private Vector3 _viewingVector;
     private Transform _playerModel;
@@ -154,6 +156,13 @@ public class PlayerMovement : MonoBehaviour
         {
             _playerJumped = true;
         }
+
+        else if (_doubleJumpAvailable && _characterController.isGrounded == false && context.started == true)
+        {
+            _ring.Play();
+            _playerJumped = true;
+            _doubleJumpAvailable = false;
+        }
     }
     private void ReloadHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -274,6 +283,11 @@ public class PlayerMovement : MonoBehaviour
         else if (_characterController.isGrounded == false)
         {
             _moveDirection.y -= _gravity * Time.deltaTime;
+        }
+
+        else if (_characterController.isGrounded)
+        {
+            _doubleJumpAvailable = true;
         }
     }
 

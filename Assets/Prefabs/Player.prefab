@@ -473,7 +473,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: SizeModule.curve.maxCurve.m_Curve.Array.data[1].time
-      value: 0.20938742
+      value: 0.4060198
       objectReference: {fileID: 0}
     - target: {fileID: 5344286366186635829, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: SizeModule.curve.maxCurve.m_Curve.Array.data[1].value
