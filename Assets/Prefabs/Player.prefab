@@ -132,7 +132,8 @@ MonoBehaviour:
   _sprintSpeed: 25
   _currentSpeed: 5
   _boostSpeed: 50
-  _jumpSpeed: 0.7
+  _jumpSpeedClamp: 60
+  _jumpForce: 1
   _gravity: 2
   _normalDecceleration: 40
   _acceleration: 0.01
@@ -518,6 +519,10 @@ PrefabInstance:
       propertyPath: m_RenderAlignment
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 7940805265807931396, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: f1e1be3d51298194680ba567d7f464f3, type: 2}
     - target: {fileID: 8111978081044263776, guid: 820108b9a3d29304ca54585477c615a5, type: 3}
       propertyPath: m_RootOrder
       value: 1

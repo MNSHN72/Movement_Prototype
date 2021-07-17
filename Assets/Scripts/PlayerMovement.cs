@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Cinemachine;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -40,6 +41,7 @@ public class PlayerMovement : MonoBehaviour
     private TrailRenderer _trail;
     private ParticleSystem _ring;
 
+
     private void Awake()
     {
         _playerInput = new PlayerInput();
@@ -51,18 +53,20 @@ public class PlayerMovement : MonoBehaviour
 
         _forward = _playerModel.forward;
 
-
         //placeholder
         _trail = transform.GetChild(1).GetChild(0).GetComponent<TrailRenderer>();
         _ring = transform.GetChild(1).GetChild(1).GetComponent<ParticleSystem>();
     }
     private void OnEnable()
     {
-        Debug.Log("enabled");
         //enable player controls
-        _playerInput.CharacterControls.Move.performed += MoveHandler;
         _playerInput.CharacterControls.Move.started += MoveHandler;
+        _playerInput.CharacterControls.Move.performed += MoveHandler;
         _playerInput.CharacterControls.Move.canceled += MoveHandler;
+
+        _playerInput.CameraControls.MoveCamera.started += MoveHandler2;
+        _playerInput.CameraControls.MoveCamera.performed += MoveHandler2;
+        _playerInput.CameraControls.MoveCamera.canceled += MoveHandler2;
 
         _playerInput.CharacterControls.Jump.started += JumpHandler;
 
@@ -74,12 +78,19 @@ public class PlayerMovement : MonoBehaviour
         _playerInput.CharacterControls.Enable();
 
     }
+
+
+
     private void OnDisable()
     {
         //disable player controls
-        _playerInput.CharacterControls.Move.performed -= MoveHandler;
         _playerInput.CharacterControls.Move.started -= MoveHandler;
+        _playerInput.CharacterControls.Move.performed -= MoveHandler;
         _playerInput.CharacterControls.Move.canceled -= MoveHandler;
+
+        _playerInput.CameraControls.MoveCamera.started -= MoveHandler2;
+        _playerInput.CameraControls.MoveCamera.performed -= MoveHandler2;
+        _playerInput.CameraControls.MoveCamera.canceled -= MoveHandler2;
 
         _playerInput.CharacterControls.Jump.started -= JumpHandler;
 
@@ -99,7 +110,7 @@ public class PlayerMovement : MonoBehaviour
         HandleAnimation();
 
         //debug
-        Debug.Log(ProcessInputs());
+        //Debug.Log(ProcessInputs());
 
         //placeholder
         _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
@@ -115,6 +126,7 @@ public class PlayerMovement : MonoBehaviour
     //inputhandlers
     private void MoveHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
+        Debug.Log("ello govna");
         //setting the bool values for _playerIsmoving which is meant to return true while the player is inputing movement
         if (context.started || context.performed)
         {
@@ -126,7 +138,12 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //sets player input to _inputdirection vector3 to use later
-        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+        _inputDirection = Camera.main.transform.TransformDirection(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+    }
+    private void MoveHandler2(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        Debug.Log("howdy partner");
+        _inputDirection = Camera.main.transform.TransformDirection(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
