@@ -27,6 +27,7 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
+    private Vector3 _transformDirection = Vector3.zero;
 
     private bool _playerIsMoving;
     private bool _playerJumped;
@@ -76,6 +77,7 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
         _playerInput.CharacterControls.Enable();
+        _playerInput.CameraControls.Enable();
 
     }
 
@@ -100,6 +102,7 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled -= ReloadHandler;
         _playerInput.CharacterControls.Disable();
+        _playerInput.CameraControls.Disable();
 
         StopAllCoroutines();
     }
@@ -138,12 +141,11 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //sets player input to _inputdirection vector3 to use later
-        _inputDirection = Camera.main.transform.TransformDirection(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+        _inputDirection = new Vector3 (context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void MoveHandler2(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         Debug.Log("howdy partner");
-        _inputDirection = Camera.main.transform.TransformDirection(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -214,6 +216,8 @@ public class PlayerMovement : MonoBehaviour
         //set to zero just in case
         Vector3 groundMovement = Vector3.zero;
 
+        _transformDirection = Camera.main.transform.TransformDirection(_inputDirection);
+
         //if you have speed it does this
         if (_currentSpeed > _moveSpeed)
         {
@@ -226,7 +230,7 @@ public class PlayerMovement : MonoBehaviour
         //if you dont it stops basically the only time you'll call this is if you dont move
         else
         {
-            groundMovement = _currentSpeed * Time.deltaTime * _inputDirection;
+            groundMovement = _currentSpeed * Time.deltaTime * _transformDirection;
         }
 
         _moveDirection = new Vector3(groundMovement.x, _moveDirection.y, groundMovement.z);
@@ -237,7 +241,7 @@ public class PlayerMovement : MonoBehaviour
         {
             return Vector3.Slerp(_forward, _forward, _directionalInfluence);
         }
-        return Vector3.Slerp(_forward, _inputDirection, _directionalInfluence);
+        return Vector3.Slerp(_forward, _transformDirection , _directionalInfluence);
     }
     private void ProcessForwardDirection()
     {
