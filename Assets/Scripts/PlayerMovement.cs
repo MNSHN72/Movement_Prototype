@@ -47,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
     private Animator _animator;
     private PlayerInput _playerInput;
 
+
     private TrailRenderer _trail;
     private ParticleSystem _ring;
 
@@ -91,7 +92,8 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.Sprint.started += AirDashHandler;
 
-        _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
+        _playerInput.CharacterControls.ReloadCurrentScene.started += ReloadHandler;
+        _playerInput.CharacterControls.CloseGame.started += CloseGameHandler;
         _playerInput.CharacterControls.Enable();
 
     }
@@ -107,7 +109,8 @@ public class PlayerMovement : MonoBehaviour
 
         _playerInput.CharacterControls.Sprint.started -= SprintHandler;
 
-        _playerInput.CharacterControls.ReloadCurrentScene.canceled -= ReloadHandler;
+        _playerInput.CharacterControls.ReloadCurrentScene.started -= ReloadHandler;
+        _playerInput.CharacterControls.CloseGame.started -= CloseGameHandler;
         _playerInput.CharacterControls.Disable();
 
         StopAllCoroutines();
@@ -116,19 +119,21 @@ public class PlayerMovement : MonoBehaviour
     //update methods
     private void Update()
     {
-
-        _transformDirection = Camera.main.transform.TransformDirection(_inputDirection);
         HandleAnimation();
 
         //debug
         //Debug.Log(ProcessInputs());
 
         //placeholder
-        _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed));
+        if (_playerControlState == ControlState.Standard)
+        {
+            _trail.time = ((_currentSpeed) * (0.2f / _boostSpeed)); 
+        }
 
     }
     private void FixedUpdate()
     {
+        _transformDirection = Camera.main.transform.TransformDirection(_inputDirection);
         ProcessAcceleration();
         ProcessForwardDirection();
         if (_playerControlState == ControlState.Standard)
@@ -211,7 +216,10 @@ public class PlayerMovement : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
+    private void CloseGameHandler(UnityEngine.InputSystem.InputAction.CallbackContext context) 
+    {
+        Application.Quit();
+    }
 
     //movement/animation handlers
     private void HandleAnimation()
@@ -364,6 +372,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void AirDash()
     {
+        _trail.time = _airDashLength;
         _airDashDirection.y = 0f;
         if (_dashTime >= _airDashLength)
         {

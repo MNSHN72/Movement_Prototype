@@ -49,6 +49,14 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": ""Press""
+                },
+                {
+                    ""name"": ""CloseGame"",
+                    ""type"": ""Button"",
+                    ""id"": ""f8e5319f-b1c3-4721-a882-af9a7725b53f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -172,6 +180,17 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                     ""action"": ""ReloadCurrentScene"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6047276f-04f1-4821-83bd-a5f5b486a936"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CloseGame"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -222,6 +241,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         m_CharacterControls_Jump = m_CharacterControls.FindAction("Jump", throwIfNotFound: true);
         m_CharacterControls_Sprint = m_CharacterControls.FindAction("Sprint", throwIfNotFound: true);
         m_CharacterControls_ReloadCurrentScene = m_CharacterControls.FindAction("ReloadCurrentScene", throwIfNotFound: true);
+        m_CharacterControls_CloseGame = m_CharacterControls.FindAction("CloseGame", throwIfNotFound: true);
         // CameraControls
         m_CameraControls = asset.FindActionMap("CameraControls", throwIfNotFound: true);
         m_CameraControls_MoveCamera = m_CameraControls.FindAction("MoveCamera", throwIfNotFound: true);
@@ -278,6 +298,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
     private readonly InputAction m_CharacterControls_Jump;
     private readonly InputAction m_CharacterControls_Sprint;
     private readonly InputAction m_CharacterControls_ReloadCurrentScene;
+    private readonly InputAction m_CharacterControls_CloseGame;
     public struct CharacterControlsActions
     {
         private @PlayerInput m_Wrapper;
@@ -286,6 +307,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         public InputAction @Jump => m_Wrapper.m_CharacterControls_Jump;
         public InputAction @Sprint => m_Wrapper.m_CharacterControls_Sprint;
         public InputAction @ReloadCurrentScene => m_Wrapper.m_CharacterControls_ReloadCurrentScene;
+        public InputAction @CloseGame => m_Wrapper.m_CharacterControls_CloseGame;
         public InputActionMap Get() { return m_Wrapper.m_CharacterControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -307,6 +329,9 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                 @ReloadCurrentScene.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
                 @ReloadCurrentScene.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
                 @ReloadCurrentScene.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnReloadCurrentScene;
+                @CloseGame.started -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCloseGame;
+                @CloseGame.performed -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCloseGame;
+                @CloseGame.canceled -= m_Wrapper.m_CharacterControlsActionsCallbackInterface.OnCloseGame;
             }
             m_Wrapper.m_CharacterControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -323,6 +348,9 @@ public class @PlayerInput : IInputActionCollection, IDisposable
                 @ReloadCurrentScene.started += instance.OnReloadCurrentScene;
                 @ReloadCurrentScene.performed += instance.OnReloadCurrentScene;
                 @ReloadCurrentScene.canceled += instance.OnReloadCurrentScene;
+                @CloseGame.started += instance.OnCloseGame;
+                @CloseGame.performed += instance.OnCloseGame;
+                @CloseGame.canceled += instance.OnCloseGame;
             }
         }
     }
@@ -366,6 +394,7 @@ public class @PlayerInput : IInputActionCollection, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnReloadCurrentScene(InputAction.CallbackContext context);
+        void OnCloseGame(InputAction.CallbackContext context);
     }
     public interface ICameraControlsActions
     {
