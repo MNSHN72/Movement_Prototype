@@ -389,7 +389,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 725682947}
-  m_LocalRotation: {x: 0.2279324, y: -0.000000002486156, z: 5.819948e-10, w: 0.973677}
+  m_LocalRotation: {x: 0.22793242, y: 0.00000004109317, z: -0.0000000096196855, w: 0.973677}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -531,7 +531,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.22793236, y: -0.000000043597698, z: 0.000000010205978, w: 0.973677}
+  m_LocalRotation: {x: 0.22793244, y: 0.000000043579327, z: -0.00000001020168, w: 0.973677}
   m_LocalPosition: {x: 0, y: 10, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -1576,7 +1576,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2111457400}
-  m_LocalRotation: {x: 0.2778645, y: -3e-45, z: 1e-45, w: 0.9606203}
+  m_LocalRotation: {x: 0.2778645, y: 1e-45, z: -0, w: 0.9606203}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1738,12 +1738,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
+      propertyPath: _moveSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _boostSpeed
       value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _sprintSpeed
-      value: 30
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _acceleration
@@ -1751,7 +1755,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _airDashSpeed
-      value: 60
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _currentSpeed
@@ -1763,7 +1767,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _jumpSpeedClamp
-      value: 40
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _airDashHangTime
@@ -1771,7 +1775,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _boostDecceleration
-      value: 50
+      value: 70
       objectReference: {fileID: 0}
     - target: {fileID: 3661161155366228406, guid: 38b6f5b7da57a8041871e00cc663031d, type: 3}
       propertyPath: _normalDecceleration
