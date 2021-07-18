@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _sprintSpeed = 30f;
     [SerializeField] private float _currentSpeed = 5f;
     [SerializeField] private float _boostSpeed = 90f;
+    [SerializeField] private float _airDashSpeed = 40f;
     [SerializeField] private float _jumpSpeedClamp = 60f;
     [SerializeField] private float _jumpForce = 1f;
     [SerializeField] private float _gravity = 2.2f;
@@ -22,17 +23,22 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _acceleration = 5f;
     [SerializeField] private float _boostDecceleration = 70f;
     [SerializeField] private float _directionalInfluence = 0.3f;
+    [SerializeField] private float _airDashLength = 0.01f;
 
     [SerializeField] private Vector3 _forward;
 
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _inputDirection = Vector3.zero;
     private Vector3 _transformDirection = Vector3.zero;
+    private Vector3 _airDashDirection = Vector3.zero;
 
     private bool _playerIsMoving;
     private bool _playerJumped;
 
+    private ControlState _playerControlState = ControlState.Standard;
+
     private bool _doubleJumpAvailable = true;
+    private bool _airDashAvailable = true;
 
     //animation related fields?
     private Vector3 _viewingVector;
@@ -43,6 +49,14 @@ public class PlayerMovement : MonoBehaviour
 
     private TrailRenderer _trail;
     private ParticleSystem _ring;
+
+    private float _dashTime = 0f;
+
+    private enum ControlState
+    {
+        Standard,
+        SP01_AirDash
+    }
 
 
     private void Awake()
@@ -55,11 +69,14 @@ public class PlayerMovement : MonoBehaviour
         _animator = _playerModel.GetComponentInChildren<Animator>();
 
         _forward = _playerModel.forward;
+        _playerControlState = ControlState.Standard;
 
         //placeholder
         _trail = transform.GetChild(1).GetChild(0).GetComponent<TrailRenderer>();
         _ring = transform.GetChild(1).GetChild(1).GetComponent<ParticleSystem>();
     }
+
+
     private void OnEnable()
     {
         //enable player controls
@@ -71,16 +88,13 @@ public class PlayerMovement : MonoBehaviour
         _playerInput.CharacterControls.Jump.started += JumpHandler;
 
         _playerInput.CharacterControls.Sprint.started += SprintHandler;
-        _playerInput.CharacterControls.Sprint.performed += SprintHandler;
-        _playerInput.CharacterControls.Sprint.canceled += SprintHandler;
+
+        _playerInput.CharacterControls.Sprint.started += AirDashHandler;
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled += ReloadHandler;
         _playerInput.CharacterControls.Enable();
 
     }
-
-
-
     private void OnDisable()
     {
         //disable player controls
@@ -92,8 +106,6 @@ public class PlayerMovement : MonoBehaviour
         _playerInput.CharacterControls.Jump.started -= JumpHandler;
 
         _playerInput.CharacterControls.Sprint.started -= SprintHandler;
-        _playerInput.CharacterControls.Sprint.performed -= SprintHandler;
-        _playerInput.CharacterControls.Sprint.canceled -= SprintHandler;
 
         _playerInput.CharacterControls.ReloadCurrentScene.canceled -= ReloadHandler;
         _playerInput.CharacterControls.Disable();
@@ -104,6 +116,8 @@ public class PlayerMovement : MonoBehaviour
     //update methods
     private void Update()
     {
+
+        _transformDirection = Camera.main.transform.TransformDirection(_inputDirection);
         HandleAnimation();
 
         //debug
@@ -117,7 +131,15 @@ public class PlayerMovement : MonoBehaviour
     {
         ProcessAcceleration();
         ProcessForwardDirection();
-        MoveCharacter();
+        if (_playerControlState == ControlState.Standard)
+        {
+            _dashTime = 0f;
+            MoveCharacter();
+        }
+        else if (_playerControlState == ControlState.SP01_AirDash)
+        {
+            AirDash();
+        }
     }
 
     //inputhandlers
@@ -134,7 +156,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //sets player input to _inputdirection vector3 to use later
-        _inputDirection = new Vector3 (context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
+        _inputDirection = new Vector3(context.ReadValue<Vector2>().x, 0f, context.ReadValue<Vector2>().y);
     }
     private void SprintHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
@@ -147,6 +169,27 @@ public class PlayerMovement : MonoBehaviour
                 _ring.Play();
                 _currentSpeed = _boostSpeed;
             }
+        }
+    }
+    private void AirDashHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    {
+        if (_characterController.isGrounded == false && _airDashAvailable)
+        {
+            Debug.Log("howdy");
+            if (context.started)
+            {
+                if (_playerIsMoving == true)
+                {
+                    _airDashDirection = _transformDirection; 
+                }
+                else
+                {
+                    _airDashDirection = _playerModel.forward;
+                }
+            }
+            _ring.Play();
+            _playerControlState = ControlState.SP01_AirDash;
+            _airDashAvailable = false;
         }
     }
     private void JumpHandler(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -212,8 +255,6 @@ public class PlayerMovement : MonoBehaviour
         //set to zero just in case
         Vector3 groundMovement = Vector3.zero;
 
-        _transformDirection = Camera.main.transform.TransformDirection(_inputDirection);
-
         //if you have speed it does this
         if (_currentSpeed > _moveSpeed)
         {
@@ -237,7 +278,7 @@ public class PlayerMovement : MonoBehaviour
         {
             return Vector3.Slerp(_forward, _forward, _directionalInfluence);
         }
-        return Vector3.Slerp(_forward, _transformDirection , _directionalInfluence);
+        return Vector3.Slerp(_forward, _transformDirection, _directionalInfluence);
     }
     private void ProcessForwardDirection()
     {
@@ -288,9 +329,9 @@ public class PlayerMovement : MonoBehaviour
         else if (_characterController.isGrounded)
         {
             _doubleJumpAvailable = true;
+            _airDashAvailable = true;
         }
     }
-
     private void ProcessAcceleration()
     {
         if (_characterController.velocity != Vector3.zero && _currentSpeed > _sprintSpeed)
@@ -317,6 +358,21 @@ public class PlayerMovement : MonoBehaviour
         {
             _currentSpeed = _moveSpeed;
         }
+    }
+
+    //special actions
+
+    private void AirDash()
+    {
+        _airDashDirection.y = 0f;
+        if (_dashTime >= _airDashLength)
+        {
+            _playerControlState = ControlState.Standard;
+        }
+        _moveDirection = _airDashDirection * _airDashSpeed * Time.deltaTime;
+        _dashTime += Time.deltaTime;
+
+        _characterController.Move(_moveDirection);
     }
 
 }
